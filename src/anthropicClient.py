@@ -21,7 +21,7 @@ class AnthropicClient(BaseLLMClient):
             response = await self._client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,  # obligatorio en Anthropic, a diferencia de OpenAI
-                temperature=self.temperature,
+                #temperature=self.temperature,
                 messages=[m.model_dump() for m in messages],
             )
             return ModelResponse(
@@ -44,7 +44,7 @@ class AnthropicClient(BaseLLMClient):
             async with self._client.messages.stream(
                 model=self.model,
                 max_tokens=self.max_tokens,
-                temperature=self.temperature,
+                #temperature=self.temperature,
                 messages=[m.model_dump() for m in messages],
             ) as stream:
                 async for texto in stream.text_stream:

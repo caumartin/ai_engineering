@@ -27,7 +27,7 @@ async def main():
 
     config_gemini = LLMConfig(
         provider=Provider.GEMINI,
-        model="gemini-flash-latest",  # mismo alias estable que usamos en el proyecto RAG
+        model="gemini-3.5-flash",  # mismo alias estable que usamos en el proyecto RAG
         google_api_key=SecretStr(os.environ["GOOGLE_API_KEY"]),
         temperature=0.7,
         max_tokens=200,
@@ -39,7 +39,7 @@ async def main():
 
     pregunta = [ChatMessage(role="user", content="¿Qué es la entropía? Respondé en 2 líneas.")]
 
-    print ("######## Comparación de resultados entre OpenAI, Anthropic y Gemini ##########")
+    print ("\n######## Comparación de resultados entre OpenAI, Anthropic y Gemini ##########")
 
     try:
         resultado = await manager_openai.generate(pregunta)
