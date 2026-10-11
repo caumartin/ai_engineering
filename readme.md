@@ -1,18 +1,20 @@
-# AI Engineering #
+# Pipeline de Extracción de Entidades Técnicas
 
-## Pre entrega 1 (commit v1.1) ##
+Sistema basado en **LangChain LCEL** + **Pydantic** que recibe texto no estructurado (descripciones de arquitectura, logs de error, etc.) y devuelve un objeto validado con:
 
-### Cliente LLM asincrono ###
+- Lista de tecnologías identificadas
+- Nivel de criticidad (`baja` | `media` | `alta`)
+- Resumen técnico conciso
 
-** Para correr: **
 
-definir api keys en archivo .env
+## Instalación
 
+```bash
+python -m venv env
+source env/bin/activate   # Windows: env\Scripts\activate
 pip install -r requirements.txt
 
-python main.py
 
-** Correcciones en v1.1: **
+## Para correr prueba ##
 
-- se cambio modelo gemini a 3.5-flash para evitar error por alta demanda.
-- se dejó de enviar temperatura a modelo Anthropic evitar error de parámetro no esperado.
+python test.py
