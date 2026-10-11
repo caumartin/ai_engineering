@@ -17,7 +17,7 @@ logger = logging.getLogger("TechnicalExtractorPipeline")
 
 
 # 1. Inicialización del modelo base y estructuración de salida
-model = ChatGoogleGenerativeAI(model="gemini-flash-latest", temperature=0.1)
+model = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0)
 structured_model = model.with_structured_output(TechnicalEntitySchema)
 model_with_retry = structured_model.with_retry(
     stop_after_attempt=3,
