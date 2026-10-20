@@ -1,0 +1,19 @@
+¿Qué son las bases de datos de series temporales?
+Son sistemas diseñados específicamente para almacenar, procesar y consultar grandes volúmenes de datos indexados cronológicamente, donde cada registro está asociado obligatoriamente a una marca de tiempo (timestamp).
+
+¿Cuándo se inventaron?
+Aunque sistemas industriales y financieros de nicho utilizaban conceptos similares desde décadas antes, el movimiento moderno de las bases de datos de series temporales (TSDBs) despegó entre 2010 y 2012 con la llegada de soluciones de código abierto como OpenTSDB e InfluxDB, impulsado por la necesidad masiva de monitorear infraestructura, la nube y dispositivos IoT.
+
+¿Cómo funcionan?
+Indexación temporal: Están optimizadas estructuralmente para ordenar, particionar y buscar datos por rangos de tiempo de forma ultrarrápida.
+
+Compresión extrema: Emplean algoritmos especializados (como compresión de deltas y codificación de valores flotantes) que reducen el espacio de almacenamiento hasta un 90% en comparación con bases de datos relacionales.
+
+Agregaciones continuas (Downsampling): Automatizan el cálculo de resúmenes (promedios, máximos o mínimos) a largo plazo para evitar procesar millones de registros sin procesar en cada consulta histórica.
+
+¿En qué contexto conviene utilizarlas?
+Monitoreo de infraestructura y DevOps: Almacenamiento de métricas de servidores, uso de CPU, red, registros de sensores o telemetría de centros de datos.
+
+Internet de las Cosas (IoT): Recolección de datos de dispositivos inteligentes, telemetría vehicular o sistemas de energía renovable.
+
+Finanzas cuantitativas: Análisis de cotizaciones bursátiles (tick data) y series de precios históricos de alta frecuencia.

@@ -1,0 +1,19 @@
+¿Qué son las bases de datos relacionales?
+Son sistemas de gestión que organizan la información en tablas compuestas por filas (registros) y columnas (atributos). Estas tablas se conectan entre sí mediante relaciones lógicas basadas en claves primarias y foráneas, evitando la duplicidad de datos.
+
+¿Cuándo se inventaron?
+El modelo relacional fue conceptualizado por el matemático Edgar F. Codd en 1970 en los laboratorios de IBM. Su adopción comercial despegó a principios de la década de 1980 con la aparición de sistemas como Oracle, IBM DB2 y, posteriormente, motores de código abierto como PostgreSQL y MySQL.
+
+¿Cómo funcionan?
+Esquema estructurado: Requieren definir un esquema estricto (tablas, tipos de datos y restricciones) antes de insertar información.
+
+Lenguaje SQL: Utilizan Structured Query Language para consultar y manipular los datos de forma declarativa.
+
+Garantía ACID: Cumplen con las propiedades de Atomicidad, Consistencia, Aislamiento y Durabilidad, asegurando que las transacciones complejas se ejecuten de forma segura y sin corrupciones.
+
+¿En qué contexto conviene utilizarlas?
+Aplicaciones transaccionales (OLTP): Sistemas bancarios, pasarelas de pago o plataformas de comercio electrónico donde la precisión financiera y el registro exacto de cada operación son críticos.
+
+Modelos altamente relacionados: Entidades complejas que requieren cruzar múltiples tablas con alta integridad referencial (por ejemplo, gestión de inventarios, usuarios, contratos y facturación).
+
+Consistencia estricta: Cuando se necesita una única fuente de la verdad y los datos no toleran estados inconsistentes o distribuidos de forma ambigua.

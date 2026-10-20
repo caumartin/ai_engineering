@@ -1,0 +1,19 @@
+¿Qué son las bases de datos vectoriales?
+Son sistemas optimizados para almacenar, gestionar y buscar vectores de alta dimensión (conocidos como embeddings), que representan matemáticamente datos no estructurados como texto, imágenes o audio generados por modelos de inteligencia artificial.
+
+¿Cuándo se inventaron?
+Aunque los algoritmos matemáticos de búsqueda de vecinos más cercanos (ANN) existen desde hace décadas en el ámbito académico, el auge de las bases de datos vectoriales comerciales y especializadas despegó entre 2019 y 2021, impulsado por la adopción masiva de los modelos transformer y la IA generativa.
+
+¿Cómo funcionan?
+Espacio multidimensional: Cada dato se convierte en un vector que ocupa una posición en un espacio de cientos o miles de dimensiones, agrupando conceptos semánticamente afines cerca unos de otros.
+
+Índices ANN: Emplean algoritmos avanzados (como HNSW o IVFFlat) para navegar y aproximar la búsqueda de los vectores más cercanos sin necesidad de evaluar linealmente todo el conjunto de datos.
+
+Métricas de similitud: Calculan la distancia matemática entre vectores mediante fórmulas como la similitud de coseno, la distancia euclidiana o el producto punto.
+
+¿En qué contexto conviene utilizarlas?
+Sistemas RAG (Retrieval-Augmented Generation): Para dotar a los modelos de lenguaje (LLMs) de una memoria externa y precisa basada en la documentación interna de una empresa.
+
+Búsqueda semántica: Permitir a los usuarios encontrar información buscando por el significado o la intención conceptual, en lugar de depender de coincidencias exactas de palabras clave.
+
+Motores de recomendación y multimedia: Sugerir productos, canciones o realizar búsquedas inversas de imágenes basadas en características visuales o de audio.

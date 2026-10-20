@@ -1,0 +1,19 @@
+¿Qué son las bases de datos no relacionales?
+Son sistemas de gestión de datos (conocidos como NoSQL) que no utilizan el modelo tabular tradicional de filas y columnas. En su lugar, emplean estructuras flexibles como documentos (JSON/BSON), pares clave-valor, familias de columnas o grafos.
+
+¿Cuándo se inventaron?
+Aunque el concepto primario data de finales de los 90, el movimiento moderno de bases de datos NoSQL explotó alrededor de 2009. Surgieron para responder a la necesidad de las grandes empresas tecnológicas de gestionar volúmenes masivos de datos distribuidos.
+
+¿Cómo funcionan?
+Esquema dinámico: Permiten almacenar registros con estructuras diferentes en una misma colección, facilitando cambios rápidos sin alterar esquemas previos.
+
+Escalabilidad horizontal: Están diseñadas para crecer distribuyendo la carga entre múltiples servidores (clústeres) en lugar de requerir hardware más potente.
+
+Filosofía BASE: Basadas en el teorema CAP, suelen sacrificar la consistencia inmediata y estricta en favor de una alta disponibilidad y tolerancia a particiones, apostando por la consistencia eventual.
+
+¿En qué contexto conviene utilizarlas?
+Datos semiestructurados o variables: Catálogos de comercio electrónico con atributos diversos por producto, perfiles de usuario flexibles o catálogos de contenido.
+
+Alta concurrencia y velocidad: Ingesta masiva de telemetría, registros (logs) de aplicaciones, feeds de redes sociales o sistemas de mensajería instantánea.
+
+Desarrollo ágil: Proyectos en fase de cambio constante donde el modelo de datos evoluciona rápido y no se pueden permitir costosas migraciones de esquemas relacionales.
