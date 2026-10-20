@@ -10,3 +10,6 @@ venv/
 # Archivos de caché de Python
 __pycache__/
 *.pyc
+
+# Carpetas de persistencia
+vectorstore/
