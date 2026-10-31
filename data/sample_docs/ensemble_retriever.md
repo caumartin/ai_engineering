@@ -1,41 +1,41 @@
-# EnsembleRetriever in LangChain
+# EnsembleRetriever en LangChain
 
-## Purpose
+## Propósito
 
-`EnsembleRetriever` merges the results of several independent retrievers and
-re-ranks them according to configurable weights.
+`EnsembleRetriever` fusiona los resultados de varios recuperadores independientes y
+los reordena según pesos configurables.
 
-## Typical configuration
+## Configuración típica
 
 ```python
 from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain_pinecone import PineconeVectorStore
 
-# Dense side
+# Lado denso
 vector_retriever = pinecone_store.as_retriever(search_kwargs={"k": 5})
 
-# Sparse side
+# Lado disperso
 bm25_retriever = BM25Retriever.from_documents(corpus_docs)
 bm25_retriever.k = 5
 
 # Ensemble
 ensemble = EnsembleRetriever(
     retrievers=[vector_retriever, bm25_retriever],
-    weights=[0.6, 0.4],   # slightly prefer semantic
+    weights=[0.6, 0.4],   # preferencia ligera por lo semántico
 )
-docs = ensemble.invoke("How does EnsembleRetriever combine multiple retrievers?")
+docs = ensemble.invoke("¿Cómo combina EnsembleRetriever varios recuperadores?")
 ```
 
-## Ranking algorithm
+## Algoritmo de ranking
 
-By default LangChain uses Reciprocal Rank Fusion (RRF). Each document receives
-a score based on its rank in every retriever; the scores are then weighted and
-summed. Documents that appear high in both lists rise to the top.
+Por defecto LangChain usa Reciprocal Rank Fusion (RRF). Cada documento recibe
+una puntuación según su posición en cada recuperador; esas puntuaciones se ponderan y
+se suman. Los documentos que aparecen altos en ambas listas suben al tope.
 
-## Practical tips
+## Consejos prácticos
 
-- Keep the same `k` on every sub-retriever so the fusion is fair.
-- Start with equal weights `[0.5, 0.5]` and tune on a small golden set.
-- For very large corpora, materialise the BM25 index once and reuse it
-  (BM25Retriever is in-memory).
+- Mantén el mismo `k` en cada sub-recuperador para que la fusión sea justa.
+- Empieza con pesos iguales `[0.5, 0.5]` y ajústalos con un golden set pequeño.
+- En corpora muy grandes, materializa el índice BM25 una vez y reutilízalo
+  (BM25Retriever vive en memoria).

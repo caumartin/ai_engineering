@@ -1,28 +1,28 @@
-# RAG Best Practices – Metadata & Chunking
+# Buenas prácticas de RAG – Metadatos y chunking
 
-## What metadata to store with each chunk
+## Qué metadatos guardar con cada chunk
 
-When you upsert vectors into Pinecone you should attach rich metadata so that
-the retrieval layer can filter and the generation layer can cite sources.
+Al insertar vectores en Pinecone conviene adjuntar metadatos ricos para que
+la capa de recuperación pueda filtrar y la de generación pueda citar fuentes.
 
-Recommended fields:
+Campos recomendados:
 
-| Field        | Type   | Purpose                                      |
-|--------------|--------|----------------------------------------------|
-| `text`       | string | Original chunk content (avoids extra DB)     |
-| `source`     | string | File name or URL                             |
-| `page`       | int    | Page number (for PDFs)                       |
-| `category`   | string | High-level tag (technical, legal, …)         |
-| `chunk_index`| int    | Position inside the original document        |
+| Campo        | Tipo   | Propósito                                      |
+|--------------|--------|------------------------------------------------|
+| `text`       | string | Contenido original del chunk (evita una BD extra) |
+| `source`     | string | Nombre de archivo o URL                        |
+| `page`       | int    | Número de página (para PDFs)                   |
+| `category`   | string | Etiqueta de alto nivel (técnico, legal, …)     |
+| `chunk_index`| int    | Posición dentro del documento original         |
 
-Example upsert payload:
+Ejemplo de payload de upsert:
 
 ```python
 {
     "id": "a1b2c3…",
-    "values": [0.012, -0.034, …],   # 384-dim embedding (MiniLM)
+    "values": [0.012, -0.034, …],   # embedding de 384 dims (MiniLM)
     "metadata": {
-        "text": "The RecursiveCharacterTextSplitter …",
+        "text": "El RecursiveCharacterTextSplitter …",
         "source": "langchain_text_splitters.md",
         "page": 0,
         "category": "technical",
@@ -31,19 +31,19 @@ Example upsert payload:
 }
 ```
 
-## Chunking guidelines
+## Guías de chunking
 
-- Target 500–800 tokens (≈ 700–1100 characters for English).
-- Use 10–20 % overlap so facts that sit on a boundary are not lost.
-- Prefer recursive splitters that respect paragraph and sentence boundaries.
-- Never embed the whole document as a single vector for long manuals.
+- Objetivo: 500–800 tokens (≈ 700–1100 caracteres en español/inglés).
+- Usa 10–20 % de solapamiento para no perder hechos que caen en el límite.
+- Prefiere divisores recursivos que respeten párrafos y oraciones.
+- Nunca embeds un manual largo como un solo vector.
 
 ## Namespaces
 
-Use a dedicated namespace per tenant or per document collection. This keeps
-queries fast and avoids cross-contamination of results.
+Usa un namespace dedicado por inquilino o por colección de documentos. Así las
+consultas son más rápidas y se evita la contaminación cruzada de resultados.
 
-## Evaluation
+## Evaluación
 
-Always maintain a small golden set of (question, expected_source) pairs and
-measure Precision@k and Recall@k after every change to the pipeline.
+Mantén siempre un golden set pequeño de pares (pregunta, documento_esperado) y
+mide Precision@k y Recall@k después de cada cambio en el pipeline.

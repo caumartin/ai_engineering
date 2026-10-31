@@ -1,11 +1,11 @@
-# Pinecone Serverless Indexes
+# Índices Serverless de Pinecone
 
-## Creating a Serverless Index
+## Crear un índice Serverless
 
-Pinecone Serverless indexes scale automatically: you pay only for storage and queries.
-Capacity, replication and availability are managed by Pinecone.
+Los índices Serverless de Pinecone escalan automáticamente: solo pagas por almacenamiento y consultas.
+La capacidad, la replicación y la disponibilidad las gestiona Pinecone.
 
-### Python SDK (v5+)
+### SDK de Python (v5+)
 
 ```python
 from pinecone import Pinecone, ServerlessSpec
@@ -14,7 +14,7 @@ pc = Pinecone(api_key="YOUR_API_KEY")
 
 pc.create_index(
     name="rag-hybrid-index",
-    dimension=384,                # must match embedding model (MiniLM/bge-small)
+    dimension=384,                # debe coincidir con el modelo de embeddings (MiniLM/bge-small)
     metric="cosine",
     spec=ServerlessSpec(
         cloud="aws",
@@ -23,9 +23,9 @@ pc.create_index(
 )
 ```
 
-### Dimension matching (critical)
+### Coincidencia de dimensiones (crítico)
 
-| Embedding model (Hugging Face)                    | Dimension |
+| Modelo de embeddings (Hugging Face)               | Dimensión |
 |---------------------------------------------------|-----------|
 | sentence-transformers/all-MiniLM-L6-v2            | 384       |
 | BAAI/bge-small-en-v1.5                            | 384       |
@@ -33,16 +33,15 @@ pc.create_index(
 | sentence-transformers/all-mpnet-base-v2           | 768       |
 | BAAI/bge-base-en-v1.5                             | 768       |
 
-If you upsert a 384-dimensional vector into an index configured for 768, Pinecone
-raises an error. Always verify `describe_index().dimension` before ingestion.
+Si insertas un vector de 384 dimensiones en un índice configurado para 768, Pinecone
+lanza un error. Siempre verifica `describe_index().dimension` antes de la ingesta.
 
 ### Namespaces
 
-Namespaces let you isolate different tenants or document collections inside the
-same index without mixing results. Pass `namespace="my-tenant"` on every upsert
-and query.
+Los namespaces permiten aislar distintos inquilinos o colecciones de documentos dentro del
+mismo índice sin mezclar resultados. Pasa `namespace="mi-tenant"` en cada upsert y consulta.
 
-### Checking readiness
+### Comprobar que está listo
 
 ```python
 while not pc.describe_index("rag-hybrid-index").status.get("ready"):

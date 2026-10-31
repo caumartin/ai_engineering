@@ -1,39 +1,39 @@
-# LangChain Text Splitters
+# Divisores de texto de LangChain
 
 ## RecursiveCharacterTextSplitter
 
-The `RecursiveCharacterTextSplitter` is the recommended text splitter for generic text.
-It tries to split on a list of characters in order, keeping semantic units together
-as much as possible.
+El `RecursiveCharacterTextSplitter` es el divisor de texto recomendado para texto genérico.
+Intenta dividir según una lista de caracteres en orden, manteniendo juntas las unidades semánticas
+en la medida de lo posible.
 
-### How it works
+### Cómo funciona
 
-1. It first attempts to split on double newlines (`\n\n`) – paragraph boundaries.
-2. If chunks are still too large, it falls back to single newlines (`\n`).
-3. Then it tries sentence-ending periods (`. `).
-4. Finally it splits on spaces and individual characters.
+1. Primero intenta dividir por dobles saltos de línea (`\n\n`) – límites de párrafo.
+2. Si los chunks siguen siendo demasiado grandes, recurre a saltos de línea simples (`\n`).
+3. Luego prueba con puntos que terminan oraciones (`. `).
+4. Por último divide por espacios y caracteres individuales.
 
-Typical parameters:
+Parámetros típicos:
 
 ```python
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 splitter = RecursiveCharacterTextSplitter(
-    chunk_size=700,      # target size in characters (~500-800 tokens)
-    chunk_overlap=120,   # overlap to preserve context across boundaries
+    chunk_size=700,      # tamaño objetivo en caracteres (~500-800 tokens)
+    chunk_overlap=120,   # solapamiento para preservar contexto entre límites
     length_function=len,
     separators=["\n\n", "\n", ". ", " ", ""],
 )
 chunks = splitter.split_documents(documents)
 ```
 
-### Why chunk size matters
+### Por qué importa el tamaño del chunk
 
-- **Too small** (< 200 tokens): embeddings lose surrounding context and retrieval becomes noisy.
-- **Too large** (> 1500 tokens): the embedding dilutes the signal of any single fact.
-- **Sweet spot**: 500–800 tokens with 10–20 % overlap.
+- **Demasiado pequeño** (< 200 tokens): los embeddings pierden contexto y la recuperación se vuelve ruidosa.
+- **Demasiado grande** (> 1500 tokens): el embedding diluye la señal de cada hecho.
+- **Punto óptimo**: 500–800 tokens con 10–20 % de solapamiento.
 
-### Metadata preserved
+### Metadatos preservados
 
-Each resulting `Document` keeps the original metadata (`source`, `page`, …) and
-adds a sequential `chunk_index` so you can reconstruct order later.
+Cada `Document` resultante conserva los metadatos originales (`source`, `page`, …) y
+añade un `chunk_index` secuencial para poder reconstruir el orden después.
