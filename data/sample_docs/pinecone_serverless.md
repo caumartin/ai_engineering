@@ -1,4 +1,4 @@
-# Índices Serverless de Pinecone
+# Indices Serverless de Pinecone
 
 ## Crear un índice Serverless
 

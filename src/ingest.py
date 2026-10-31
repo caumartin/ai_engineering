@@ -31,7 +31,7 @@ def run_ingestion(data_path: str = "data/sample_docs"):
     init_pinecone_index()
     
     print("Cargando documentos en español...")
-    loader = DirectoryLoader(data_path, glob="**/*.md", loader_cls=TextLoader)
+    loader = DirectoryLoader(data_path, glob="**/*.md", loader_cls=TextLoader, loader_kwargs={"encoding": "utf-8"})
     documents = loader.load()
     
     if not documents:

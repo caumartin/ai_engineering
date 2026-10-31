@@ -34,7 +34,7 @@ class RAGSystem:
         docs = []
         if os.path.exists(sample_corpus_path):
             from langchain_community.document_loaders import DirectoryLoader, TextLoader
-            loader = DirectoryLoader(sample_corpus_path, glob="**/*.md", loader_cls=TextLoader)
+            loader = DirectoryLoader(sample_corpus_path, glob="**/*.md", loader_cls=TextLoader, loader_kwargs={"encoding": "utf-8"})
             raw_docs = loader.load()
             from langchain_text_splitters import RecursiveCharacterTextSplitter
             splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=100)
