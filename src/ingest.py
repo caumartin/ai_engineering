@@ -4,7 +4,7 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from src.config import settings
+from src.config import settings, clean_spanish_text
 
 def init_pinecone_index():
     pc = Pinecone(api_key=settings.PINECONE_API_KEY)
@@ -12,10 +12,10 @@ def init_pinecone_index():
     
     existing_indexes = [idx["name"] for idx in pc.list_indexes()]
     if index_name not in existing_indexes:
-        print(f"Creando índice serverless en Pinecone para Hugging Face: {index_name}...")
+        print(f"Creando índice serverless en Pinecone: {index_name}...")
         pc.create_index(
             name=index_name,
-            dimension=384, # Dimensión nativa de all-MiniLM-L6-v2
+            dimension=384,  # Dimensión de all-MiniLM-L6-v2
             metric="cosine",
             spec=ServerlessSpec(
                 cloud="aws",
@@ -30,13 +30,17 @@ def init_pinecone_index():
 def run_ingestion(data_path: str = "data/sample_docs"):
     init_pinecone_index()
     
-    print("Cargando documentos...")
+    print("Cargando documentos en español...")
     loader = DirectoryLoader(data_path, glob="**/*.md", loader_cls=TextLoader)
     documents = loader.load()
     
     if not documents:
         print("No se encontraron documentos para ingestar.")
         return
+
+    # Limpiar caracteres especiales de los documentos cargados usando la función centralizada
+    for doc in documents:
+        doc.page_content = clean_spanish_text(doc.page_content)
 
     print(f"Aplicando chunking a {len(documents)} documentos...")
     text_splitter = RecursiveCharacterTextSplitter(
@@ -51,7 +55,7 @@ def run_ingestion(data_path: str = "data/sample_docs"):
         doc.metadata["doc_id"] = f"{os.path.basename(source)}_chunk_{i}"
         doc.metadata["text_content"] = doc.page_content
 
-    print("Generando embeddings con Hugging Face (all-MiniLM-L6-v2) e insertando en Pinecone...")
+    print("Generando embeddings con Hugging Face e insertando en Pinecone...")
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     
     vectorstore = PineconeVectorStore.from_documents(
@@ -60,7 +64,7 @@ def run_ingestion(data_path: str = "data/sample_docs"):
         index_name=settings.PINECONE_INDEX_NAME,
         text_key="text_content"
     )
-    print("¡Ingesta con Hugging Face completada con éxito!")
+    print("¡Ingesta y limpieza completadas con éxito!")
 
 if __name__ == "__main__":
     run_ingestion()

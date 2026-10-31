@@ -4,7 +4,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.retrievers import BM25Retriever
 from langchain_classic.retrievers import EnsembleRetriever
 from langchain_core.documents import Document
-from src.config import settings
+from src.config import settings, clean_spanish_text
 
 class RAGSystem:
     def __init__(self):
@@ -26,7 +26,7 @@ class RAGSystem:
         # 3. Recuperador Híbrido Oficial (EnsembleRetriever)
         self.ensemble_retriever = EnsembleRetriever(
             retrievers=[self.bm25_retriever, self.vector_retriever],
-            weights=[0.4, 0.6]  # 40% BM25 (léxico) y 60% Vectorial (semántico)
+            weights=[0.4, 0.6]  # 40% BM25 y 60% Vectorial
         )
 
     def _init_bm25_retriever(self) -> BM25Retriever:
@@ -40,9 +40,10 @@ class RAGSystem:
             splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=100)
             docs = splitter.split_documents(raw_docs)
         
-        # Sincronizar metadatos exactamente igual que en el pipeline de ingesta
+        # Limpiar y sincronizar metadatos para BM25
         for i, doc in enumerate(docs):
             source = doc.metadata.get("source", "unknown")
+            doc.page_content = clean_spanish_text(doc.page_content)
             doc.metadata["doc_id"] = f"{os.path.basename(source)}_chunk_{i}"
             doc.metadata["text_content"] = doc.page_content
 
@@ -54,8 +55,14 @@ class RAGSystem:
         return bm25
 
     def retrieve(self, query: str, k: int = 5):
+        """
+        Normaliza la consulta del usuario y ejecuta el EnsembleRetriever.
+        """
+        # Normalizar la consulta para alinearla con el corpus limpio
+        normalized_query = clean_spanish_text(query)
+        
         self.vector_retriever.search_kwargs["k"] = k
         self.bm25_retriever.k = k
         
-        results = self.ensemble_retriever.invoke(query)
+        results = self.ensemble_retriever.invoke(normalized_query)
         return results[:k]
