@@ -1,15 +1,35 @@
-# Archivo de variables de entorno
+# Environment
 .env
-
-# Entornos virtuales
-env/
-.env/
-venv/
 .venv/
+venv/
+env/
 
-# Archivos de caché de Python
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
 
-# Carpetas de persistencia
-vectorstore/
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Data & logs
+*.log
+logs/
+.cache/
+data/raw_pdfs/
+*.pkl
+
+# Evaluation outputs
+evaluation_results.json
+reports/

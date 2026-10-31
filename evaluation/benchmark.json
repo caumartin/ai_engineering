@@ -1,0 +1,22 @@
+[
+  {
+    "pregunta": "What is RecursiveCharacterTextSplitter and how does it split text?",
+    "documento_id_esperado": "langchain_text_splitters.md"
+  },
+  {
+    "pregunta": "How do I create a Serverless index in Pinecone with Python?",
+    "documento_id_esperado": "pinecone_serverless.md"
+  },
+  {
+    "pregunta": "What is the difference between dense and sparse vectors in hybrid search?",
+    "documento_id_esperado": "hybrid_search.md"
+  },
+  {
+    "pregunta": "How does EnsembleRetriever combine multiple retrievers in LangChain?",
+    "documento_id_esperado": "ensemble_retriever.md"
+  },
+  {
+    "pregunta": "What metadata should be stored with each chunk in a Pinecone RAG pipeline?",
+    "documento_id_esperado": "rag_best_practices.md"
+  }
+]
