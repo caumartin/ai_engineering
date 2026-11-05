@@ -27,8 +27,7 @@ Thumbs.db
 *.log
 logs/
 .cache/
-data/raw_pdfs/
-*.pkl
+checkpoints.*
 
 # Evaluation outputs
 evaluation_results.json
