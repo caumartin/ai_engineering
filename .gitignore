@@ -30,5 +30,5 @@ logs/
 checkpoints.*
 
 # Evaluation outputs
-evaluation_results.json
+traza_ejecucion.json
 reports/
