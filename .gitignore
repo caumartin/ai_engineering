@@ -1,34 +1,13 @@
-# Environment
-.env
-.venv/
-venv/
-env/
-
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-dist/
-*.egg-info/
-.eggs/
-*.egg
 
-# IDE / OS
-.idea/
-.vscode/
-*.swp
-.DS_Store
-Thumbs.db
-
-# Data & logs
-*.log
-logs/
-.cache/
-checkpoints.*
-
-# Evaluation outputs
-traza_ejecucion.json
-reports/
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
