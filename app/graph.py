@@ -22,8 +22,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 6
-SUPERVISOR_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
-AGENT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
+SUPERVISOR_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+AGENT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 
 def get_llm(model_name: str = AGENT_MODEL, temperature: float = 0.2):
