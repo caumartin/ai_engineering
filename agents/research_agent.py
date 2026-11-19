@@ -1,8 +1,6 @@
 """
 Agente de Investigación con LLM real de Gemini.
-Usa herramientas y razonamiento del modelo.
 """
-
 import os
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
@@ -15,8 +13,8 @@ def get_llm(temperature: float = 0.3):
     if not api_key:
         raise ValueError("Falta GOOGLE_API_KEY")
     return ChatGoogleGenerativeAI(
-        model="gemini-3.5-flash-lite",
-        #temperature=temperature,
+        model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+        temperature=temperature,
         google_api_key=api_key,
     )
 
@@ -25,8 +23,7 @@ def get_llm(temperature: float = 0.3):
 def search_web(query: str) -> str:
     """
     Busca información relevante en fuentes externas.
-    En esta versión simulada retorna datos mock. 
-    Puedes reemplazarla por TavilySearchResults cuando tengas la API key.
+    Versión simulada (reemplazable por TavilySearchResults).
     """
     mock_results = {
         "ia": "El mercado de IA creció un 35% en 2025. Principales jugadores: OpenAI, Google DeepMind, Anthropic. Tendencia fuerte hacia agentes autónomos y multimodalidad.",
@@ -41,7 +38,6 @@ def search_web(query: str) -> str:
 
 
 def extract_text(content) -> str:
-    """Extrae texto de response.content (puede ser str o list)."""
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -56,15 +52,10 @@ def extract_text(content) -> str:
 
 
 def research_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Nodo del Agente de Investigación usando Gemini.
-    """
     user_query = state.get("user_query", "")
     iteration = state.get("iteration_count", 0)
 
     llm = get_llm()
-
-    # Bind tools
     llm_with_tools = llm.bind_tools([search_web])
 
     system = """Eres un agente de investigación experto.
@@ -77,10 +68,8 @@ Luego resume los hallazgos de forma clara y concisa."""
         HumanMessage(content=f"Investiga y resume: {user_query}"),
     ]
 
-    # Primera llamada (puede pedir tool)
     response = llm_with_tools.invoke(messages)
 
-    # Si pide herramienta, ejecutarla y continuar
     if response.tool_calls:
         tool_call = response.tool_calls[0]
         if tool_call["name"] == "search_web":

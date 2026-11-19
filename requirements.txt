@@ -1,5 +1,16 @@
-langgraph>=0.2.0
-langchain-core>=0.3.0
-langchain-google-genai>=2.0.0
+# API multi-agente de producción
+langgraph
+langchain-core
+langchain-google-genai
 google-generativeai
 python-dotenv
+fastapi
+uvicorn[standard]
+redis
+langgraph-checkpoint-redis
+arize-phoenix
+openinference-instrumentation-langchain
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+httpx
+pydantic

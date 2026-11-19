@@ -1,108 +1,135 @@
-# Orquestador Multi-Agente Especializado
+# API de Producción - Sistema Multi-Agente (Pre-entrega 7)
 
-Prototipo funcional de un sistema jerárquico de agentes usando **LangGraph** con modelos reales de **Gemini**.
+API REST asíncrona (FastAPI) que expone el orquestador multi-agente del Módulo 6, con:
 
-## Topología Elegida
+- Endpoints asíncronos (encola y devuelve `job_id`)
+- Persistencia de estado y checkpoints con **Redis** (`RedisSaver`)
+- Observabilidad con **Arize Phoenix** (OpenInference) o LangSmith
+- Flujo **Human-in-the-Loop** (HITL) para tareas críticas
+- Manejo de errores: estado `FAILED` en Redis ante excepciones
 
-**Jerárquica con Supervisor central** (Router + Controlador de flujo).
 
-- El **Supervisor** es el único punto de decisión. Evalúa el estado actual y decide qué especialista debe intervenir o si la tarea está completa.
-- Los agentes especialistas (**Research** y **Analyst**) no se comunican entre sí directamente. Siempre regresan al Supervisor.
-- Esto evita contaminación de contexto y permite trazabilidad clara.
-
-### Diagrama del Grafo (Mermaid)
-
-```mermaid
-graph TD
-    START([START]) --> Supervisor
-    Supervisor -->|next_agent=research| Research[Agente Investigación]
-    Supervisor -->|next_agent=analyst| Analyst[Agente Análisis]
-    Supervisor -->|FINISH| END([END])
-    Research --> Supervisor
-    Analyst --> Supervisor
-```
-
-## Manejo de Conflictos y Bucles
-
-- **Contador de iteraciones** (`iteration_count`) con límite (`MAX_ITERATIONS = 6`).
-- El Supervisor usa un LLM de Gemini con una **rúbrica de suficiencia**:
-  - Sin `research_data` → Research
-  - Con research pero sin `analysis_result` → Analyst
-  - Ambos presentes y de calidad suficiente → FINISH
-- Cada contribución se registra en `contributions` para auditoría.
-- Manejo robusto de respuestas de Gemini (cuando `content` llega como lista en lugar de string).
-
-## Estructura del Repositorio
+## Estructura
 
 ```
-├── state.py                 # Esquema TypedDict (AgentState)
-├── main.py                  # Grafo + Supervisor + ejecución
-├── requirements.txt
-├── .gitignore
+├── app/
+│   ├── main.py          # FastAPI: POST /tasks, GET /tasks/{id}, POST /tasks/{id}/approve
+│   ├── graph.py         # Orquestador multi-agente + RedisSaver + nodo HITL
+│   ├── worker.py        # Ejecución en background + actualización de estado en Redis
+│   ├── observability.py # Init de Phoenix / LangSmith
+│   └── hitl.py          # Nodo de aprobación humana (interrupt)
 ├── agents/
-│   ├── __init__.py
-│   ├── research_agent.py    # Agente de búsqueda (LLM + tool)
-│   └── analyst_agent.py     # Agente de análisis (LLM)
-└── README.md
+│   ├── state.py
+│   ├── research_agent.py
+│   └── analyst_agent.py
+├── requirements.txt
+├── docker-compose.yml   # API + Redis + Phoenix
+├── Dockerfile
+├── .env.example
+└── screenshots/         # Capturas del dashboard (trazas, costo, latencia p95)
 ```
 
-## Modelos
 
-Se usan **modelos reales de Gemini** (`gemini-1.5-flash`) vía `langchain-google-genai`.
+## Requisitos
 
-### Requisitos
+- Python 3.12+
+- Docker & Docker Compose (recomendado)
+- API key de Google AI Studio (`GOOGLE_API_KEY`)
 
-1. Obtén una API key de Google AI Studio: https://aistudio.google.com/app/apikey
-2. Exporta la variable:
+
+## Cómo levantar (recomendado: API local + Redis/Phoenix en Docker)
+
+1. Configura variables de entorno:
 
 ```bash
-# Linux / Mac
-export GOOGLE_API_KEY="tu-api-key-aqui"
-
-# Windows (CMD)
-set GOOGLE_API_KEY=tu-api-key-aqui
-
-# Windows (PowerShell)
-$env:GOOGLE_API_KEY="tu-api-key-aqui"
+cp .env.example .env
+# Edita .env y pon tu GOOGLE_API_KEY
 ```
 
-3. Instala dependencias:
+2. Levanta solo Redis y Phoenix:
 
 ```bash
+docker compose up -d
+```
+
+- Redis → `localhost:6379`
+- Phoenix (dashboard) → `http://localhost:6006`
+
+3. Instala dependencias y corre la API localmente:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-### Ejecución
+La API queda en `http://localhost:8000`.
+
+
+
+## Endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/tasks` | Encola tarea. Devuelve `job_id` inmediatamente. |
+| `GET` | `/tasks/{job_id}` | Consulta estado (`PENDING`, `RUNNING`, `WAITING_APPROVAL`, `DONE`, `FAILED`) |
+| `POST` | `/tasks/{job_id}/approve` | Aprueba/rechaza tarea en HITL |
+| `GET` | `/health` | Health check |
+
+
+### Ejemplo de uso
 
 ```bash
-python main.py
+# Crear tarea
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Analiza el mercado de IA y da sentimiento general", "is_critical": false}'
+
+# Consultar estado
+curl http://localhost:8000/tasks/<job_id>
+
+# Tarea crítica (se detiene en HITL)
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Ejecutar análisis crítico del mercado y generar reporte de producción", "is_critical": true}'
+
+# Aprobar
+curl -X POST http://localhost:8000/tasks/<job_id>/approve \
+  -H "Content-Type: application/json" \
+  -d '{"approved": true}'
 ```
 
-### Ejemplo de Consulta
 
-> "Analiza el estado actual del mercado de inteligencia artificial y da un sentimiento general."
+## Prueba de carga (5 peticiones concurrentes)
 
-Flujo esperado:
-1. Supervisor → Research (obtiene datos)
-2. Supervisor → Analyst (procesa y sintetiza)
-3. Supervisor → FINISH
+```bash
+# Script de prueba concurrente
+for i in {1..5}; do
+  curl -X POST http://localhost:8000/tasks \
+    -H "Content-Type: application/json" \
+    -d "{\"query\": \"Analiza el estado del mercado de IA $i\", \"is_critical\": false}" &
+done
+wait
+```
 
-## Herramientas
+## Observabilidad
 
-- **Research**: `search_web` (simulada; fácilmente reemplazable por `TavilySearchResults`).
-- **Analyst**: Razonamiento directo del LLM (sentimiento, métricas y síntesis).
+1. Abrir Phoenix en `http://localhost:6006`
+2. Ejecutar las 5 peticiones concurrentes
+3. En el dashboard se verán:
+   - Trazas de cada nodo del grafo (supervisor, research, analyst)
+   - Costo por ejecución (calculado automáticamente a partir de tokens)
+   - Latencia p95
 
-## Estado Compartido
 
-Ver `state.py`. Campos clave:
-- `research_data`, `analysis_result`: outputs de especialistas
-- `contributions`: trazabilidad de qué agente aportó qué
-- `next_agent`, `task_completed`, `iteration_count`: control de flujo
-- `validation_feedback`: decisiones del supervisor
+## Estados de un job
 
-## Extensiones Posibles
+| Estado | Significado |
+|--------|-------------|
+| `PENDING` | Encolado |
+| `RUNNING` | Ejecutando el grafo |
+| `WAITING_APPROVAL` | Pausado en HITL (esperando `POST /approve`) |
+| `DONE` | Completado exitosamente |
+| `FAILED` | Falló (excepción capturada y estado actualizado) |
 
-- Integrar Tavily real (`TAVILY_API_KEY`)
-- Añadir más agentes (Writer, Validator, etc.)
-- Persistencia con Postgres o Redis en lugar de `MemorySaver`
-- Añadir streaming de respuestas
