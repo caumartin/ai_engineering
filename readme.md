@@ -48,8 +48,6 @@ Si la tarea es crítica, el flujo se pausa en HITL hasta recibir aprobación ext
 │   └── retriever.py      # Chroma + embeddings
 ├── docker-compose.yml    # Redis Stack + Phoenix
 ├── requirements.txt
-├── run.sh
-└── screenshots/          # Trazas de Phoenix
 ```
 
 ## Cómo levantar (todo en Docker)
@@ -89,15 +87,10 @@ curl -X POST http://localhost:8000/tasks \
   -H "Content-Type: application/json" \
   -d '{"query": "Explica RAG y agentes multi-agente", "is_critical": false}'
 
-
-# Consultar estado:
-curl -X GET http://localhost:8000/tasks/<job_id>
-
-
 # Tarea crítica (se detiene en HITL)
 curl -X POST http://localhost:8000/tasks \
   -H "Content-Type: application/json" \
-  -d '{"query": "Generar reporte critico de produccion", "is_critical": true}'
+  -d '{"query": "Generar reporte crítico de producción", "is_critical": true}'
 
 # Aprobar
 curl -X POST http://localhost:8000/tasks/<job_id>/approve \
@@ -105,18 +98,14 @@ curl -X POST http://localhost:8000/tasks/<job_id>/approve \
   -d '{"approved": true}'
 ```
 
-## Pruebas de observabilidad (mínimo 5)
+## Pruebas de observabilidad (5 consultas distintas)
 
 ```bash
-for i in {1..5}; do
-  curl -X POST http://localhost:8000/tasks \
-    -H "Content-Type: application/json" \
-    -d "{\"query\": \"Analiza el estado actual de la IA $i\", \"is_critical\": false}" &
-done
-wait
+# Dentro del contenedor o localmente con las dependencias instaladas con ./setup_test_env.sh
+python test_concurrent.py
 ```
 
-Luego abre Phoenix y captura las trazas en `/screenshots`.
+El script envía 5 consultas diferentes en paralelo y muestra los `job_id`.
 
 ## Estados de un job
 
