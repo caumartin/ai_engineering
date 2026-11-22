@@ -1,10 +1,7 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Environments
+*.pyc
 .env
-.venv
-env/
+.venv/
 venv/
+*.egg-info/
+.DS_Store

@@ -1,80 +1,40 @@
-"""
-Agente de Análisis con LLM real de Gemini.
-"""
-import os
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-from typing import Dict, Any
+"""Agente analista."""
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from agents.state import AgentState
+from app.llm import get_llm
+
+import logging
+logger = logging.getLogger(__name__)
 
 
-def get_llm(temperature: float = 0.2):
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("Falta GOOGLE_API_KEY")
-    return ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
-        temperature=temperature,
-        google_api_key=api_key,
-    )
+def analyst_agent(state: AgentState) -> dict:
+    query = state.get("user_query", "")
+    research = state.get("research_data", "")
+    rag = state.get("rag_context", "")
+    logger.info("[ANALYST] Generando análisis...")
 
+    llm = get_llm(temperature=0.2)
+    prompt = f"""Eres un analista senior. Genera un análisis claro y accionable basado en la información disponible.
 
-def extract_text(content) -> str:
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        parts = []
-        for block in content:
-            if isinstance(block, str):
-                parts.append(block)
-            elif isinstance(block, dict) and "text" in block:
-                parts.append(block["text"])
-        return " ".join(parts)
-    return str(content)
+Consulta del usuario: {query}
 
-
-def analyst_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-    research_data = state.get("research_data", "")
-    user_query = state.get("user_query", "")
-    iteration = state.get("iteration_count", 0)
-
-    if not research_data:
-        analysis = "No hay datos de investigación disponibles para analizar."
-    else:
-        llm = get_llm()
-
-        system = """Eres un agente de análisis experto.
-Recibes datos de investigación y debes:
-1. Hacer un análisis de sentimiento (positivo / negativo / neutral) con justificación.
-2. Extraer métricas o números relevantes si existen.
-3. Dar una síntesis clara y accionable relacionada con la consulta del usuario.
-Sé preciso y estructurado."""
-
-        prompt = f"""Consulta original del usuario: {user_query}
+Contexto RAG:
+{rag[:1500] if rag else "No disponible"}
 
 Datos de investigación:
-{research_data}
+{research[:1500] if research else "No disponible"}
 
-Realiza el análisis completo."""
+Análisis final:"""
 
-        response = llm.invoke([
-            SystemMessage(content=system),
-            HumanMessage(content=prompt),
-        ])
+    response = llm.invoke([
+        SystemMessage(content="Eres un analista experto. Produce conclusiones claras y bien fundamentadas."),
+        HumanMessage(content=prompt),
+    ])
 
-        analysis = f"""
-[ANÁLISIS - Iteración {iteration}]
-{extract_text(response.content)}
-"""
-
-    contribution = {
-        "agent": "analyst",
-        "iteration": iteration,
-        "output": analysis,
-    }
+    content = response.content if isinstance(response.content, str) else str(response.content)
 
     return {
-        "messages": [AIMessage(content=analysis[:300] + "...")],
-        "analysis_result": analysis,
-        "contributions": [contribution],
-        "next_agent": "supervisor",
+        "messages": [AIMessage(content="[ANALYST] Análisis generado.")],
+        "analysis_result": content,
+        "contributions": state.get("contributions", []) + ["analyst"],
     }

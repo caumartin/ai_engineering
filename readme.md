@@ -1,98 +1,103 @@
-# API de Producción - Sistema Multi-Agente (Pre-entrega 7)
+# Sistema Intelligence - Entrega Final
 
-API REST asíncrona (FastAPI) que expone el orquestador multi-agente del Módulo 6, con:
+Sistema de IA de grado de producción que integra:
 
-- Endpoints asíncronos (encola y devuelve `job_id`)
-- Persistencia de estado y checkpoints con **Redis** (`RedisSaver`)
-- Observabilidad con **Arize Phoenix** (OpenInference) o LangSmith
-- Flujo **Human-in-the-Loop** (HITL) para tareas críticas
-- Manejo de errores: estado `FAILED` en Redis ante excepciones
+- **RAG** (recuperación de conocimiento)
+- **Agentes multi-agente con Supervisor**
+- **API REST profesional** (FastAPI, async)
+- **Trazabilidad completa** (Arize Phoenix)
+- **Persistencia de estado** (Redis + LangGraph Checkpointer)
+- **Human-in-the-Loop** para tareas críticas
 
+## Diagrama del Grafo de Agentes
+
+```
+                    ┌─────────────┐
+                    │  SUPERVISOR │
+                    └──────┬──────┘
+                           │
+         ┌─────────┬───────┼───────┬─────────┐
+         ▼         ▼       ▼       ▼         ▼
+      ┌─────┐  ┌────────┐ ┌──────┐ ┌──────┐  END
+      │ RAG │  │Research│ │Analyst│ │ HITL │
+      └──┬──┘  └───┬────┘ └───┬──┘ └───┬──┘
+         │         │          │        │
+         └─────────┴──────────┴────────┘
+                           │
+                    (vuelve a Supervisor)
+```
+
+El Supervisor decide dinámicamente el siguiente agente según el estado.  
+Si la tarea es crítica, el flujo se pausa en HITL hasta recibir aprobación externa.
 
 ## Estructura
 
 ```
 ├── app/
-│   ├── main.py          # FastAPI: POST /tasks, GET /tasks/{id}, POST /tasks/{id}/approve
-│   ├── graph.py         # Orquestador multi-agente + RedisSaver + nodo HITL
-│   ├── worker.py        # Ejecución en background + actualización de estado en Redis
-│   ├── observability.py # Init de Phoenix / LangSmith
-│   └── hitl.py          # Nodo de aprobación humana (interrupt)
+│   ├── main.py           # FastAPI (endpoints async)
+│   ├── graph.py          # Orquestador + AsyncRedisSaver
+│   ├── worker.py         # Background tasks
+│   ├── observability.py  # Phoenix / OpenInference
+│   └── hitl.py           # Nodo Human-in-the-Loop
 ├── agents/
 │   ├── state.py
+│   ├── rag_agent.py
 │   ├── research_agent.py
 │   └── analyst_agent.py
+├── rag/
+│   └── retriever.py      # Chroma + embeddings
+├── docker-compose.yml    # Redis Stack + Phoenix
 ├── requirements.txt
-├── docker-compose.yml   # API + Redis + Phoenix
-├── Dockerfile
-├── .env.example
-└── screenshots/         # Capturas del dashboard (trazas, costo, latencia p95)
+├── run.sh
+└── screenshots/          # Trazas de Phoenix
 ```
 
-
-## Requisitos
-
-- Python 3.12+
-- Docker & Docker Compose (recomendado)
-- API key de Google AI Studio (`GOOGLE_API_KEY`)
-
-
-## Cómo levantar (recomendado: API local + Redis/Phoenix en Docker)
-
-1. Configura variables de entorno:
+## Cómo levantar (todo en Docker)
 
 ```bash
+# 1. Configura el .env
 cp .env.example .env
 # Edita .env y pon tu GOOGLE_API_KEY
+
+# 2. Levanta Redis + Phoenix + API
+docker compose up -d --build
 ```
 
-2. Levanta solo Redis y Phoenix:
+- API → `http://localhost:8000`
+- Phoenix → `http://localhost:6006`
+- Docs → `http://localhost:8000/docs`
 
+Para ver logs de la API:
 ```bash
-docker compose up -d
+docker compose logs -f api
 ```
-
-- Redis → `localhost:6379`
-- Phoenix (dashboard) → `http://localhost:6006`
-
-3. Instala dependencias y corre la API localmente:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-La API queda en `http://localhost:8000`.
-
-
 
 ## Endpoints
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `POST` | `/tasks` | Encola tarea. Devuelve `job_id` inmediatamente. |
-| `GET` | `/tasks/{job_id}` | Consulta estado (`PENDING`, `RUNNING`, `WAITING_APPROVAL`, `DONE`, `FAILED`) |
-| `POST` | `/tasks/{job_id}/approve` | Aprueba/rechaza tarea en HITL |
+| `GET` | `/tasks/{job_id}` | Consulta estado |
+| `POST` | `/tasks/{job_id}/approve` | Aprueba/rechaza HITL |
 | `GET` | `/health` | Health check |
 
-
-### Ejemplo de uso
+### Ejemplo
 
 ```bash
-# Crear tarea
+# Tarea normal
 curl -X POST http://localhost:8000/tasks \
   -H "Content-Type: application/json" \
-  -d '{"query": "Analiza el mercado de IA y da sentimiento general", "is_critical": false}'
+  -d '{"query": "Explica RAG y agentes multi-agente", "is_critical": false}'
 
-# Consultar estado
-curl http://localhost:8000/tasks/<job_id>
+
+# Consultar estado:
+curl -X GET http://localhost:8000/tasks/<job_id>
+
 
 # Tarea crítica (se detiene en HITL)
 curl -X POST http://localhost:8000/tasks \
   -H "Content-Type: application/json" \
-  -d '{"query": "Ejecutar análisis crítico del mercado y generar reporte de producción", "is_critical": true}'
+  -d '{"query": "Generar reporte critico de produccion", "is_critical": true}'
 
 # Aprobar
 curl -X POST http://localhost:8000/tasks/<job_id>/approve \
@@ -100,36 +105,34 @@ curl -X POST http://localhost:8000/tasks/<job_id>/approve \
   -d '{"approved": true}'
 ```
 
-
-## Prueba de carga (5 peticiones concurrentes)
+## Pruebas de observabilidad (mínimo 5)
 
 ```bash
-# Script de prueba concurrente
 for i in {1..5}; do
   curl -X POST http://localhost:8000/tasks \
     -H "Content-Type: application/json" \
-    -d "{\"query\": \"Analiza el estado del mercado de IA $i\", \"is_critical\": false}" &
+    -d "{\"query\": \"Analiza el estado actual de la IA $i\", \"is_critical\": false}" &
 done
 wait
 ```
 
-## Observabilidad
-
-1. Abrir Phoenix en `http://localhost:6006`
-2. Ejecutar las 5 peticiones concurrentes
-3. En el dashboard se verán:
-   - Trazas de cada nodo del grafo (supervisor, research, analyst)
-   - Costo por ejecución (calculado automáticamente a partir de tokens)
-   - Latencia p95
-
+Luego abre Phoenix y captura las trazas en `/screenshots`.
 
 ## Estados de un job
 
 | Estado | Significado |
 |--------|-------------|
 | `PENDING` | Encolado |
-| `RUNNING` | Ejecutando el grafo |
-| `WAITING_APPROVAL` | Pausado en HITL (esperando `POST /approve`) |
-| `DONE` | Completado exitosamente |
-| `FAILED` | Falló (excepción capturada y estado actualizado) |
+| `RUNNING` | Ejecutando |
+| `WAITING_APPROVAL` | Pausado en HITL |
+| `DONE` | Completado |
+| `FAILED` | Error capturado |
 
+## Notas técnicas
+
+- Todo el flujo es **async** (`astream`, `AsyncRedisSaver`, `BackgroundTasks`).
+- Validación de entradas/salidas con **Pydantic**.
+- Checkpointer de LangGraph en **Redis** (persistencia entre reinicios).
+- Observabilidad con **Arize Phoenix** (trazas de cada nodo).
+- RAG con **Chroma** + embeddings de Google.
+- Sin hard-coding de secretos (todo en variables de entorno).
