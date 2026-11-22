@@ -12,3 +12,4 @@ arize-phoenix-otel
 openinference-instrumentation-langchain
 pydantic
 python-dotenv
+httpx
